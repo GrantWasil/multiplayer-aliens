@@ -248,12 +248,60 @@ function finishGame(playerId) {
     resetServerState();
 }
 
-function resetServerState() {}
+function resetServerState() {
+    peopleAccessingTheWebsite = 0;
+    gameOn = false;
+    gameTickerOn = false;
+    totalPlayers = 0;
+    alivePlayers = 0;
+    for (let item in playerChannels) {
+        playerChannels[item].unsubscribe();
+    }
+}
 
-function startShipAndBullets() {}
+function startShipAndBullets() {
+    gameOn = true;
 
-function startMovingPhysicsWorld() {}
+    world = new p2.World({
+        gravity: [0, -9.82],
+    });
+    shipBody = new p2.Body({
+        position: [shipX, shipY],
+        velocity: [calcRandomVelocity() , 0],
+    });
+    world.addBody(shipBody);
+    startMovingPhysicsWorld();
+  
+    for (let playerId in players) {
+      startDownwardMovement(playerId);
+    }
+  }
 
-function calcRandomVelocity() {}
+function startMovingPhysicsWorld() {
+    let p2WorldInterval = setInterval(function () {
+        if (!gameOn) {
+            clearInterval(p2WorldInterval);
+        } else {
+            if (++shipVelocityTimer >= 80) {
+                shipVelocityTimer = 0;
+                shipBody.velocity[0] = calcRandomVelocity();
+            }
+            world.step(P2_WORLD_TIME_STEP);
+            if (shipBody.position[0] > 1400 && shipBody.velocity[0] > 0) {
+                shipBody.position[0] = 0;
+            } else if (shipBody.position[0] < 0 && shipBody.velocity[0] < 0) {
+                shipBody.position[0] = 1400;
+            }
+        }
+    }, 1000 * P2_WORLD_TIME_STEP);
+}
 
-function randomAvatarSelector() {}
+function calcRandomVelocity() {
+    let randomShipXVelocity = Math.floor(Math.random() * 200) + 20;
+    randomShipXVelocity *= Math.floor(Math.random() * 2) == 1 ? 1 : -1;
+    return randomShipXVelocity;
+}
+
+function randomAvatarSelector() {
+    return Math.floor(Math.random() * 3);
+}
